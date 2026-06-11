@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LIFETECH · Oracle DB Explorer</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">LIFETECH <span>Oracle Explorer</span></div>
+    <div id="connInfo" class="conn">connecting…</div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <h2>Tables</h2>
+        <button id="refreshTables" title="Reload tables">⟳</button>
+      </div>
+      <input id="tableSearch" type="search" placeholder="Filter tables…" />
+      <ul id="tableList" class="table-list"></ul>
+    </aside>
+
+    <main class="content">
+      <div id="emptyState" class="empty">
+        <p>Select a table from the left to view its data.</p>
+      </div>
+
+      <section id="tableView" class="hidden">
+        <div class="toolbar">
+          <h1 id="currentTable"></h1>
+          <div class="toolbar-actions">
+            <button id="openBulk" class="btn">Conditional update…</button>
+            <button id="reload" class="btn ghost">Reload</button>
+          </div>
+        </div>
+
+        <div class="grid-wrap">
+          <table id="dataGrid" class="grid">
+            <thead>
+              <tr id="headerRow"></tr>
+              <tr id="filterRow" class="filter-row"></tr>
+            </thead>
+            <tbody id="dataBody"></tbody>
+          </table>
+        </div>
+
+        <div class="pager">
+          <button id="prevPage" class="btn ghost">‹ Prev</button>
+          <span id="pageInfo"></span>
+          <button id="nextPage" class="btn ghost">Next ›</button>
+          <label class="page-size">
+            Rows:
+            <select id="pageSize">
+              <option>25</option>
+              <option selected>50</option>
+              <option>100</option>
+              <option>200</option>
+            </select>
+          </label>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Bulk / conditional update modal -->
+  <div id="bulkModal" class="modal hidden">
+    <div class="modal-box">
+      <h3>Conditional update</h3>
+      <p class="hint">
+        Set a column to a value for every row matching your condition.
+        Useful for flipping a flag column to <code>1</code> or <code>0</code>.
+      </p>
+      <label>Column
+        <select id="bulkColumn"></select>
+      </label>
+      <label>New value
+        <input id="bulkValue" type="text" placeholder="e.g. 1 or 0" />
+      </label>
+      <label>WHERE condition
+        <input id="bulkCondition" type="text" placeholder="e.g. STATUS = 'OLD' AND ID > 100" />
+      </label>
+      <p class="hint small">
+        Tip: use <code>1=1</code> to match every row. The new value is
+        sent safely as a bind variable; the condition is raw SQL.
+      </p>
+      <div id="bulkResult" class="bulk-result"></div>
+      <div class="modal-actions">
+        <button id="bulkCancel" class="btn ghost">Cancel</button>
+        <button id="bulkPreview" class="btn">Preview count</button>
+        <button id="bulkApply" class="btn primary" disabled>Apply update</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
