@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LIFETECH &mdash; Management Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">LT</span>
+      <div>
+        <h1>LIFETECH Dashboard</h1>
+        <p class="subtitle">Registrations &amp; Encounters</p>
+      </div>
+    </div>
+    <div class="status">
+      <span id="db-dot" class="dot"></span>
+      <span id="db-text">checking&hellip;</span>
+      <span id="updated" class="updated"></span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Registration KPIs -->
+    <section>
+      <h2 class="section-title">Total Registrations</h2>
+      <div class="cards">
+        <div class="card accent-blue">
+          <div class="card-label">Today</div>
+          <div class="card-value" id="reg-today">&mdash;</div>
+        </div>
+        <div class="card accent-teal">
+          <div class="card-label">This Week</div>
+          <div class="card-value" id="reg-week">&mdash;</div>
+        </div>
+        <div class="card accent-purple">
+          <div class="card-label">This Month</div>
+          <div class="card-value" id="reg-month">&mdash;</div>
+        </div>
+        <div class="card accent-grey">
+          <div class="card-label">All Time</div>
+          <div class="card-value" id="reg-total">&mdash;</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Encounters today -->
+    <section>
+      <h2 class="section-title">Encounters Created Today</h2>
+      <div class="cards">
+        <div class="card accent-blue">
+          <div class="card-label">Total Encounters</div>
+          <div class="card-value" id="enc-total">&mdash;</div>
+        </div>
+        <div class="card accent-red">
+          <div class="card-label">Urgent Care</div>
+          <div class="card-value" id="enc-urgent">&mdash;</div>
+        </div>
+        <div class="card accent-green">
+          <div class="card-label">Consult</div>
+          <div class="card-value" id="enc-consult">&mdash;</div>
+        </div>
+        <div class="card accent-amber">
+          <div class="card-label">Non-Consult</div>
+          <div class="card-value" id="enc-nonconsult">&mdash;</div>
+        </div>
+        <div class="card accent-teal">
+          <div class="card-label">Consulted</div>
+          <div class="card-value" id="enc-consulted">&mdash;</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Registration trend chart -->
+    <section>
+      <div class="chart-head">
+        <h2 class="section-title">Registration Trend</h2>
+        <div class="toggle" id="period-toggle">
+          <button data-period="day" class="active">Day</button>
+          <button data-period="week">Week</button>
+          <button data-period="month">Month</button>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="reg-chart"></canvas>
+        <div id="chart-empty" class="empty" hidden>No data for this period.</div>
+      </div>
+    </section>
+
+    <!-- Doctor breakdown -->
+    <section>
+      <h2 class="section-title">Today&rsquo;s Encounters by Provider</h2>
+      <table class="grid" id="doctor-table">
+        <thead><tr><th>Provider</th><th class="num">Encounters</th></tr></thead>
+        <tbody><tr><td colspan="2" class="muted">Loading&hellip;</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>LIFETECH internal dashboard</span>
+    <button id="refresh-btn">Refresh now</button>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
