@@ -7,20 +7,26 @@ REM ===================================================================
 setlocal
 cd /d "%~dp0"
 
-REM --- 1. Check Python is available -----------------------------------
-where python >nul 2>nul
-if errorlevel 1 (
+REM --- 1. Locate Python (try py launcher, then python) ---------------
+set "PY="
+py --version >nul 2>nul && set "PY=py"
+if not defined PY (
+  python --version >nul 2>nul && set "PY=python"
+)
+if not defined PY (
   echo [ERROR] Python is not installed or not on PATH.
   echo Install Python 3 from https://www.python.org/downloads/windows/
-  echo During setup, TICK "Add python.exe to PATH", then re-run this file.
+  echo During setup, TICK "Add python.exe to PATH", then open a NEW
+  echo command prompt and re-run this file.
   pause
   exit /b 1
 )
+echo Using Python launcher: %PY%
 
 REM --- 2. Create a virtual environment on first run -------------------
 if not exist ".venv" (
   echo Creating virtual environment...
-  python -m venv .venv
+  %PY% -m venv .venv
 )
 
 REM --- 3. Install / update dependencies -------------------------------
