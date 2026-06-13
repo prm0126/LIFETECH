@@ -25,15 +25,37 @@ By default only valid encounters (`NVL(ISVALID,1)=1`) are counted. Table names,
 column names and the employee-name function are all configurable via `.env` so
 the app can point at views or renamed objects without code changes.
 
-## Setup
+## Windows quick start (one click)
+
+On the Windows server, get the code and use the bundled launcher:
+
+```bat
+git clone https://github.com/prm0126/LIFETECH.git
+cd /d D:\path\to\LIFETECH
+run.bat
+```
+
+`run.bat` creates a virtual environment, installs dependencies, and creates a
+`.env` from the template on first run (it opens Notepad so you can fill in
+`ORACLE_USER` / `ORACLE_PASSWORD` / `ORACLE_DSN`). Run it again and the
+dashboard starts on `http://0.0.0.0:8080/`.
+
+> Requires Python 3 with **"Add python.exe to PATH"** ticked during install
+> (download: https://www.python.org/downloads/windows/). If `git` isn't
+> available, download the repo ZIP from GitHub and extract it instead.
+>
+> Note: on Windows, `cd` to another drive needs the `/d` switch
+> (`cd /d D:\...`), and use `copy` rather than the Linux `cp`.
+
+## Setup (manual)
 
 ```bash
 cd LIFETECH
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+pip install -r requirements.txt    # Windows: python -m pip install -r requirements.txt
 
-cp .env.example .env               # then edit .env with your DB details
+cp .env.example .env               # Windows: copy .env.example .env
 ```
 
 Edit `.env` and set at least `ORACLE_USER`, `ORACLE_PASSWORD` and `ORACLE_DSN`
@@ -51,7 +73,10 @@ python app.py
 interfaces so other machines on the network can reach it:
 
 ```bash
-# Linux / Windows (waitress, cross-platform)
+# Cross-platform, no PATH issues (uses waitress under the hood)
+python serve.py
+
+# Or the waitress console script (Linux/Windows)
 waitress-serve --host=0.0.0.0 --port=8080 app:app
 
 # Linux only (gunicorn)
