@@ -1,5 +1,6 @@
 Flask>=3.0.0
-oracledb>=2.0.0
+# Pinned <4.0: thick mode in 3.x supports Oracle Client 11.2 (4.x needs client 19+)
+oracledb>=3.0.0,<4.0.0
 python-dotenv>=1.0.0
 gunicorn>=21.2.0
 waitress>=3.0.0
