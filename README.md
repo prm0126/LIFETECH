@@ -31,6 +31,10 @@ with multiple dashboards:
     AND EMR_DATE >= :date_from AND EMR_DATE < :date_to + 1
   GROUP BY TRUNC(EMR_DATE, :gran) ORDER BY 1
   ```
+- **Sample billing reports:** the **"Load sample billing reports"** button seeds a ready-made
+  set (revenue trend, revenue by source, top services/pharmacy items, consultation revenue by
+  provider, pharmacy trend, discount trend, revenue today) built on `GEN_PAT_BILLING` /
+  `INV_PAT_BILLING` / `CON_PAT_BILLING` / `PH_PAT_BILLING` / `INV_MAST_SERVICE`, all filtered `ISVALID = 1`.
 - **Read-only & safety:** only a single `SELECT`/`WITH` statement is accepted (no `;`,
   no INSERT/UPDATE/DELETE/DDL/PLSQL) and results are capped at `CUSTOM_MAX_ROWS`.
   For defense in depth, point the app at a **read-only Oracle account** for this DB.

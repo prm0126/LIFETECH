@@ -260,11 +260,22 @@ window.CustomReports = (function () {
   // refresh just the sidebar menu (used at startup)
   async function refreshNav() { await fetchList(); }
 
+  async function seedSamples() {
+    msg("Loading sample reports…");
+    try {
+      var r = await send("POST", "/api/custom/seed", {});
+      msg(r.added ? (r.added + " sample report(s) added.") : "Samples already loaded.", "ok");
+      await loadList();
+    } catch (e) { msg(e.message, "err"); }
+  }
+
   var wired = false;
   function wire() {
     if (wired) return; wired = true;
     $("cq-preview").addEventListener("click", preview);
     $("cq-save").addEventListener("click", save);
+    var seed = $("cq-seed");
+    if (seed) seed.addEventListener("click", seedSamples);
     var cancel = $("cq-edit-cancel");
     if (cancel) cancel.addEventListener("click", clearForm);
   }

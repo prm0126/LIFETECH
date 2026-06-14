@@ -23,6 +23,7 @@ import custom
 import custom_store
 import db
 import queries
+import samples
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -163,6 +164,24 @@ def custom_run(qid):
     if not item:
         return jsonify({"error": "Report not found."}), 404
     return jsonify(custom.run_saved(item, request.args))
+
+
+@app.route("/api/custom/seed", methods=["POST"])
+def custom_seed():
+    """Load the bundled sample billing reports (skips ones already present by title)."""
+    existing = {it["title"].strip().lower() for it in custom_store.list_all()}
+    added = 0
+    for r in samples.BILLING_REPORTS:
+        if r["title"].strip().lower() in existing:
+            continue
+        try:
+            sql = custom.clean_sql(r["sql"])
+            custom.validate_params(sql)
+        except ValueError:
+            continue
+        custom_store.add(r["title"], r["type"], sql)
+        added += 1
+    return jsonify({"added": added})
 
 
 @app.route("/api/custom/preview", methods=["POST"])
