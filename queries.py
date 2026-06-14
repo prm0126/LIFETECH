@@ -98,8 +98,8 @@ def encounters_today():
         SELECT
             COUNT(*)                                                       AS total,
             COUNT(CASE WHEN ISEMERGENCY = 1 THEN 1 END)                    AS urgent_care,
-            COUNT(CASE WHEN NVL(ISNONCONSULTENCOUNTER, 0) = 0 THEN 1 END)  AS consult,
-            COUNT(CASE WHEN ISNONCONSULTENCOUNTER = 1 THEN 1 END)          AS non_consult,
+            COUNT(CASE WHEN NVL(ISNONCONSULTENCOUNTER, -1) <> 0 THEN 1 END) AS consult,
+            COUNT(CASE WHEN ISNONCONSULTENCOUNTER = 0 THEN 1 END)          AS non_consult,
             COUNT(CASE WHEN IS_CONSULTED = 1 THEN 1 END)                   AS consulted
         FROM {Config.ENC_TABLE}
         WHERE TRUNC({Config.ENC_DATE_COLUMN}) = TRUNC(SYSDATE){_enc_valid_clause()}
