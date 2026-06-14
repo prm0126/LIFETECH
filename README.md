@@ -1,9 +1,19 @@
 # LIFETECH Management Dashboard
 
-A lightweight web dashboard for hospital management to view:
+A lightweight web dashboard for hospital management. It has a left-hand menu
+with multiple dashboards:
 
+**Overview**
 - **Total registrations** &mdash; day-wise, week-wise and month-wise (with a trend chart)
-- **Encounters created today** &mdash; total, **urgent care**, **consult**, **non-consult** and **consulted**, plus a per-provider breakdown
+- **Encounters created today** &mdash; total, **urgent care**, **consult**, **non-consult** and **consulted**
+- **Doctor-wise encounters** &mdash; trend over time split by doctor (Day / Week / Month / Year)
+- Per-provider breakdown for today
+
+**Nurse Analysis**
+- Patients with **notes** entered today (a row exists in the provider-visit table)
+- Patients with **vitals** entered today, total vitals records, active nurses
+- **Notes vs Vitals** trend (Day / Week / Month / Year)
+- **Vitals details** table (EMR date, MRNO, vital, time, entered-by nurse)
 
 It reads directly from the Oracle database and is meant to be hosted on an
 internal server so management can open it in any browser on the same network.

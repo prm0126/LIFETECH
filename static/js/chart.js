@@ -196,5 +196,155 @@
     return l;
   }
 
+  /* ----------------------------------------------------------------------
+   * MiniLineChart — multi-series line chart with legend + hover tooltip.
+   *   new MiniLineChart(canvas).render({ labels:[...], series:[{name,values}] });
+   * -------------------------------------------------------------------- */
+  var SERIES_COLORS = [
+    "#2f6fed", "#1faa59", "#f0a020", "#e2433f", "#7c4dff",
+    "#12a8a8", "#d4499b", "#6b7280", "#0ea5e9", "#84cc16",
+  ];
+
+  function MiniLineChart(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
+    this.data = { labels: [], series: [] };
+    this.hover = -1;
+    this._onMove = this._onMove.bind(this);
+    this._onLeave = this._onLeave.bind(this);
+    this._onResize = this._onResize.bind(this);
+    canvas.addEventListener("mousemove", this._onMove);
+    canvas.addEventListener("mouseleave", this._onLeave);
+    window.addEventListener("resize", this._onResize);
+  }
+
+  MiniLineChart.prototype.render = function (data) {
+    this.data = data || { labels: [], series: [] };
+    this._draw();
+  };
+
+  MiniLineChart.prototype._dims = MiniBarChart.prototype._dims;
+  MiniLineChart.prototype._niceMax = MiniBarChart.prototype._niceMax;
+
+  MiniLineChart.prototype._layout = function (w, h, legendRows) {
+    var pad = { l: 44, r: 16, t: 16, b: 46 + legendRows * 20 };
+    return { pad: pad, plotW: w - pad.l - pad.r, plotH: h - pad.t - pad.b };
+  };
+
+  MiniLineChart.prototype._draw = function () {
+    var ctx = this.ctx;
+    var d = this.data;
+    var dim = this._dims();
+    var w = dim.w, h = dim.h;
+    ctx.clearRect(0, 0, w, h);
+    if (!d.series || d.series.length === 0 || d.labels.length === 0) return;
+
+    var perRow = Math.max(1, Math.floor(w / 150));
+    var legendRows = Math.ceil(d.series.length / perRow);
+    var lay = this._layout(w, h, legendRows);
+
+    var maxVal = 1;
+    d.series.forEach(function (s) {
+      s.values.forEach(function (v) { if (v > maxVal) maxVal = v; });
+    });
+    var max = this._niceMax(maxVal);
+    var n = d.labels.length;
+    var stepX = n > 1 ? lay.plotW / (n - 1) : 0;
+    var xAt = function (i) { return lay.pad.l + (n > 1 ? i * stepX : lay.plotW / 2); };
+    var yAt = function (v) { return lay.pad.t + lay.plotH - (v / max) * lay.plotH; };
+
+    // gridlines + y labels
+    ctx.font = "11px -apple-system, Segoe UI, Roboto, sans-serif";
+    ctx.strokeStyle = "#e6e9f2";
+    ctx.fillStyle = "#7b859c";
+    ctx.lineWidth = 1;
+    var ticks = 4;
+    for (var t = 0; t <= ticks; t++) {
+      var val = Math.round((max / ticks) * t);
+      var gy = yAt(val);
+      ctx.beginPath(); ctx.moveTo(lay.pad.l, gy); ctx.lineTo(lay.pad.l + lay.plotW, gy); ctx.stroke();
+      ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      ctx.fillText(String(val), lay.pad.l - 8, gy);
+    }
+
+    // x labels (thinned)
+    ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillStyle = "#7b859c";
+    var every = Math.ceil(n / 12);
+    for (var i = 0; i < n; i++) {
+      if (i % every !== 0 && i !== n - 1) continue;
+      ctx.fillText(shortLabel(d.labels[i]), xAt(i), lay.pad.t + lay.plotH + 8);
+    }
+
+    // lines
+    d.series.forEach(function (s, si) {
+      var color = SERIES_COLORS[si % SERIES_COLORS.length];
+      ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+      s.values.forEach(function (v, i) {
+        var px = xAt(i), py = yAt(v);
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      });
+      ctx.stroke();
+      ctx.fillStyle = color;
+      s.values.forEach(function (v, i) {
+        ctx.beginPath(); ctx.arc(xAt(i), yAt(v), 2.5, 0, Math.PI * 2); ctx.fill();
+      });
+    });
+
+    // hover guide + tooltip
+    if (this.hover >= 0 && this.hover < n) {
+      var hx = xAt(this.hover);
+      ctx.strokeStyle = "#c9cdd6"; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.moveTo(hx, lay.pad.t); ctx.lineTo(hx, lay.pad.t + lay.plotH); ctx.stroke();
+      ctx.setLineDash([]);
+      var lines = [d.labels[this.hover]];
+      d.series.forEach(function (s) { lines.push(s.name + ": " + (s.values[this.hover] || 0)); }, this);
+      ctx.font = "12px -apple-system, Segoe UI, Roboto, sans-serif";
+      var tw = 0;
+      lines.forEach(function (ln) { tw = Math.max(tw, ctx.measureText(ln).width); });
+      tw += 16;
+      var th = lines.length * 17 + 8;
+      var tx = Math.min(Math.max(hx + 10, 2), w - tw - 2);
+      var ty = lay.pad.t + 4;
+      ctx.fillStyle = "rgba(31,42,68,.92)";
+      roundRect(ctx, tx, ty, tw, th, 6); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.textAlign = "left"; ctx.textBaseline = "top";
+      lines.forEach(function (ln, i) { ctx.fillText(ln, tx + 8, ty + 6 + i * 17); });
+    }
+
+    // legend
+    ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    var ly = lay.pad.t + lay.plotH + 30;
+    d.series.forEach(function (s, si) {
+      var col = si % perRow, row = Math.floor(si / perRow);
+      var lx = lay.pad.l + col * (lay.plotW / perRow);
+      var yy = ly + row * 20;
+      ctx.fillStyle = SERIES_COLORS[si % SERIES_COLORS.length];
+      roundRect(ctx, lx, yy - 5, 10, 10, 2); ctx.fill();
+      ctx.fillStyle = "#1f2a44";
+      ctx.fillText(s.name, lx + 16, yy);
+    });
+
+    this._geom = { xAt: xAt, n: n, pad: lay.pad };
+  };
+
+  MiniLineChart.prototype._onMove = function (e) {
+    if (!this._geom) return;
+    var rect = this.canvas.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    var nearest = -1, best = 1e9;
+    for (var i = 0; i < this._geom.n; i++) {
+      var dx = Math.abs(this._geom.xAt(i) - x);
+      if (dx < best) { best = dx; nearest = i; }
+    }
+    if (nearest !== this.hover) { this.hover = nearest; this._draw(); }
+  };
+  MiniLineChart.prototype._onLeave = function () {
+    if (this.hover !== -1) { this.hover = -1; this._draw(); }
+  };
+  MiniLineChart.prototype._onResize = function () {
+    clearTimeout(this._rt); this._rt = setTimeout(this._draw.bind(this), 120);
+  };
+
   global.MiniBarChart = MiniBarChart;
+  global.MiniLineChart = MiniLineChart;
 })(window);

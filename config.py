@@ -57,10 +57,23 @@ class Config:
     # Employee-name lookup function (schema-qualify if needed).
     EMPLOYEE_NAME_FN = os.getenv("EMPLOYEE_NAME_FN", "GET_EMPLOYEE_NAME")
 
+    # ---- Nurse analysis / EMR objects -------------------------------------
+    # A nurse note is considered present when a row exists in the provider
+    # visit table (template_type = EMR_VISIT_TEMPLATE_TYPE, isvalid = 1).
+    EMR_VISIT_TABLE = os.getenv("EMR_VISIT_TABLE", "emr_provider_visit")
+    EMR_VISIT_DATE_COL = os.getenv("EMR_VISIT_DATE_COL", "EMR_DATE")
+    EMR_VISIT_PATIENT_COL = os.getenv("EMR_VISIT_PATIENT_COL", "MRNO")
+    EMR_VISIT_TEMPLATE_TYPE = int(os.getenv("EMR_VISIT_TEMPLATE_TYPE", "1"))
+    EMR_VITALS_TABLE = os.getenv("EMR_VITALS_TABLE", "EMR_PAT_VITAL_SIGN_PHYS")
+    EMR_LOOKUP_TABLE = os.getenv("EMR_LOOKUP_TABLE", "emr_lookup")
+
     # ---- Chart history windows --------------------------------------------
     DAYS_HISTORY = int(os.getenv("DAYS_HISTORY", "30"))
     WEEKS_HISTORY = int(os.getenv("WEEKS_HISTORY", "12"))
     MONTHS_HISTORY = int(os.getenv("MONTHS_HISTORY", "12"))
+    YEARS_HISTORY = int(os.getenv("YEARS_HISTORY", "5"))
+    # Max distinct doctors plotted on the trend (rest grouped as "Others").
+    TOP_DOCTORS = int(os.getenv("TOP_DOCTORS", "8"))
 
     # ---- App ---------------------------------------------------------------
     SECRET_KEY = os.getenv("SECRET_KEY", "lifetech-dashboard")

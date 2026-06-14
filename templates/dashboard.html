@@ -7,102 +7,144 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-  <header class="topbar">
+<div class="app">
+  <!-- Left navigation -->
+  <aside class="sidebar">
     <div class="brand">
       <span class="logo">LT</span>
       <div>
-        <h1>LIFETECH Dashboard</h1>
-        <p class="subtitle">Registrations &amp; Encounters</p>
+        <h1>LIFETECH</h1>
+        <p class="subtitle">Dashboards</p>
       </div>
     </div>
-    <div class="status">
+    <nav class="nav">
+      <button class="nav-item active" data-view="overview">
+        <span class="nav-ico">&#9632;</span> Overview
+      </button>
+      <button class="nav-item" data-view="nurse">
+        <span class="nav-ico">&#9827;</span> Nurse Analysis
+      </button>
+    </nav>
+    <div class="nav-foot">
       <span id="db-dot" class="dot"></span>
       <span id="db-text">checking&hellip;</span>
-      <span id="updated" class="updated"></span>
     </div>
-  </header>
+  </aside>
 
-  <main>
-    <!-- Registration KPIs -->
-    <section>
-      <h2 class="section-title">Total Registrations</h2>
-      <div class="cards">
-        <div class="card accent-blue">
-          <div class="card-label">Today</div>
-          <div class="card-value" id="reg-today">&mdash;</div>
-        </div>
-        <div class="card accent-teal">
-          <div class="card-label">This Week</div>
-          <div class="card-value" id="reg-week">&mdash;</div>
-        </div>
-        <div class="card accent-purple">
-          <div class="card-label">This Month</div>
-          <div class="card-value" id="reg-month">&mdash;</div>
-        </div>
-        <div class="card accent-grey">
-          <div class="card-label">All Time</div>
-          <div class="card-value" id="reg-total">&mdash;</div>
-        </div>
+  <div class="main-area">
+    <header class="topbar">
+      <h2 id="view-title">Registrations &amp; Encounters</h2>
+      <div class="status">
+        <span id="updated" class="updated"></span>
+        <button id="refresh-btn">Refresh</button>
       </div>
-    </section>
+    </header>
 
-    <!-- Encounters today -->
-    <section>
-      <h2 class="section-title">Encounters Created Today</h2>
-      <div class="cards">
-        <div class="card accent-blue">
-          <div class="card-label">Total Encounters</div>
-          <div class="card-value" id="enc-total">&mdash;</div>
-        </div>
-        <div class="card accent-red">
-          <div class="card-label">Urgent Care</div>
-          <div class="card-value" id="enc-urgent">&mdash;</div>
-        </div>
-        <div class="card accent-green">
-          <div class="card-label">Consult</div>
-          <div class="card-value" id="enc-consult">&mdash;</div>
-        </div>
-        <div class="card accent-amber">
-          <div class="card-label">Non-Consult</div>
-          <div class="card-value" id="enc-nonconsult">&mdash;</div>
-        </div>
-        <div class="card accent-teal">
-          <div class="card-label">Consulted</div>
-          <div class="card-value" id="enc-consulted">&mdash;</div>
-        </div>
+    <main>
+      <!-- ===================== OVERVIEW ===================== -->
+      <div id="view-overview" class="view">
+        <section>
+          <h3 class="section-title">Total Registrations</h3>
+          <div class="cards">
+            <div class="card accent-blue"><div class="card-label">Today</div><div class="card-value" id="reg-today">&mdash;</div></div>
+            <div class="card accent-teal"><div class="card-label">This Week</div><div class="card-value" id="reg-week">&mdash;</div></div>
+            <div class="card accent-purple"><div class="card-label">This Month</div><div class="card-value" id="reg-month">&mdash;</div></div>
+            <div class="card accent-grey"><div class="card-label">All Time</div><div class="card-value" id="reg-total">&mdash;</div></div>
+          </div>
+        </section>
+
+        <section>
+          <h3 class="section-title">Encounters Created Today</h3>
+          <div class="cards">
+            <div class="card accent-blue"><div class="card-label">Total</div><div class="card-value" id="enc-total">&mdash;</div></div>
+            <div class="card accent-red"><div class="card-label">Urgent Care</div><div class="card-value" id="enc-urgent">&mdash;</div></div>
+            <div class="card accent-green"><div class="card-label">Consult</div><div class="card-value" id="enc-consult">&mdash;</div></div>
+            <div class="card accent-amber"><div class="card-label">Non-Consult</div><div class="card-value" id="enc-nonconsult">&mdash;</div></div>
+            <div class="card accent-teal"><div class="card-label">Consulted</div><div class="card-value" id="enc-consulted">&mdash;</div></div>
+          </div>
+        </section>
+
+        <section>
+          <div class="chart-head">
+            <h3 class="section-title">Registration Trend</h3>
+            <div class="toggle" data-toggle="reg">
+              <button data-period="day" class="active">Day</button>
+              <button data-period="week">Week</button>
+              <button data-period="month">Month</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="reg-chart"></canvas>
+            <div id="reg-empty" class="empty" hidden>No data for this period.</div>
+          </div>
+        </section>
+
+        <section>
+          <div class="chart-head">
+            <h3 class="section-title">Doctor-wise Encounters (Trend)</h3>
+            <div class="toggle" data-toggle="doctor">
+              <button data-period="day" class="active">Day</button>
+              <button data-period="week">Week</button>
+              <button data-period="month">Month</button>
+              <button data-period="year">Year</button>
+            </div>
+          </div>
+          <div class="chart-wrap tall">
+            <canvas id="doctor-chart"></canvas>
+            <div id="doctor-empty" class="empty" hidden>No encounter data for this period.</div>
+          </div>
+        </section>
+
+        <section>
+          <h3 class="section-title">Today&rsquo;s Encounters by Provider</h3>
+          <table class="grid" id="doctor-table">
+            <thead><tr><th>Provider</th><th class="num">Encounters</th></tr></thead>
+            <tbody><tr><td colspan="2" class="muted">Loading&hellip;</td></tr></tbody>
+          </table>
+        </section>
       </div>
-    </section>
 
-    <!-- Registration trend chart -->
-    <section>
-      <div class="chart-head">
-        <h2 class="section-title">Registration Trend</h2>
-        <div class="toggle" id="period-toggle">
-          <button data-period="day" class="active">Day</button>
-          <button data-period="week">Week</button>
-          <button data-period="month">Month</button>
-        </div>
+      <!-- ===================== NURSE ANALYSIS ===================== -->
+      <div id="view-nurse" class="view" hidden>
+        <section>
+          <h3 class="section-title">Nurse Activity Today</h3>
+          <div class="cards">
+            <div class="card accent-purple"><div class="card-label">Patients w/ Notes</div><div class="card-value" id="nur-notes">&mdash;</div></div>
+            <div class="card accent-blue"><div class="card-label">Patients w/ Vitals</div><div class="card-value" id="nur-vpat">&mdash;</div></div>
+            <div class="card accent-teal"><div class="card-label">Vitals Records</div><div class="card-value" id="nur-vrec">&mdash;</div></div>
+            <div class="card accent-green"><div class="card-label">Nurses Active</div><div class="card-value" id="nur-active">&mdash;</div></div>
+          </div>
+        </section>
+
+        <section>
+          <div class="chart-head">
+            <h3 class="section-title">Notes vs Vitals Trend</h3>
+            <div class="toggle" data-toggle="nurse">
+              <button data-period="day" class="active">Day</button>
+              <button data-period="week">Week</button>
+              <button data-period="month">Month</button>
+              <button data-period="year">Year</button>
+            </div>
+          </div>
+          <div class="chart-wrap tall">
+            <canvas id="nurse-chart"></canvas>
+            <div id="nurse-empty" class="empty" hidden>No nurse data for this period.</div>
+          </div>
+        </section>
+
+        <section>
+          <h3 class="section-title">Vitals Entered Today (details)</h3>
+          <table class="grid" id="vitals-table">
+            <thead><tr>
+              <th>EMR Date</th><th>MRNO</th><th>Vital</th><th>Entered At</th><th>Entered By</th>
+            </tr></thead>
+            <tbody><tr><td colspan="5" class="muted">Loading&hellip;</td></tr></tbody>
+          </table>
+        </section>
       </div>
-      <div class="chart-wrap">
-        <canvas id="reg-chart"></canvas>
-        <div id="chart-empty" class="empty" hidden>No data for this period.</div>
-      </div>
-    </section>
-
-    <!-- Doctor breakdown -->
-    <section>
-      <h2 class="section-title">Today&rsquo;s Encounters by Provider</h2>
-      <table class="grid" id="doctor-table">
-        <thead><tr><th>Provider</th><th class="num">Encounters</th></tr></thead>
-        <tbody><tr><td colspan="2" class="muted">Loading&hellip;</td></tr></tbody>
-      </table>
-    </section>
-  </main>
-
-  <footer class="foot">
-    <span>LIFETECH internal dashboard</span>
-    <button id="refresh-btn">Refresh now</button>
-  </footer>
+    </main>
+  </div>
+</div>
 
   <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
   <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>

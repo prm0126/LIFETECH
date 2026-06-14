@@ -70,6 +70,37 @@ def doctors_today():
     return jsonify(queries.encounters_by_doctor_today())
 
 
+def _period_arg():
+    period = request.args.get("period", "day").lower()
+    return period if period in ("day", "week", "month", "year") else "day"
+
+
+@app.route("/api/encounters/doctor-trend")
+def doctor_trend():
+    period = _period_arg()
+    data = queries.encounters_doctor_trend(period)
+    data["period"] = period
+    return jsonify(data)
+
+
+@app.route("/api/nurse/summary")
+def nurse_summary():
+    return jsonify(queries.nurse_summary())
+
+
+@app.route("/api/nurse/trend")
+def nurse_trend():
+    period = _period_arg()
+    data = queries.nurse_trend(period)
+    data["period"] = period
+    return jsonify(data)
+
+
+@app.route("/api/nurse/vitals")
+def nurse_vitals():
+    return jsonify(queries.nurse_vitals_details())
+
+
 @app.errorhandler(Exception)
 def handle_error(exc):
     app.logger.exception("Unhandled error")
