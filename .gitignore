@@ -4,3 +4,5 @@ __pycache__/
 .venv/
 venv/
 *.log
+custom_queries.json
+custom_queries.json.tmp

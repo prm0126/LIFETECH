@@ -80,6 +80,12 @@ class Config:
     HOST = os.getenv("HOST", "0.0.0.0")
     PORT = int(os.getenv("PORT", "8080"))
 
+    # ---- Custom reports (web query builder) -------------------------------
+    # File where user-defined reports are saved (created automatically).
+    CUSTOM_STORE_FILE = os.getenv("CUSTOM_STORE_FILE", "custom_queries.json")
+    # Max rows fetched per custom query (safety cap).
+    CUSTOM_MAX_ROWS = int(os.getenv("CUSTOM_MAX_ROWS", "500"))
+
     @classmethod
     def dsn(cls):
         if cls.ORACLE_DSN:

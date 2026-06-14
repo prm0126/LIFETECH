@@ -19,6 +19,8 @@ import logging
 from flask import Flask, jsonify, render_template, request
 
 from config import Config
+import custom
+import custom_store
 import db
 import queries
 
@@ -99,6 +101,58 @@ def nurse_trend():
 @app.route("/api/nurse/vitals")
 def nurse_vitals():
     return jsonify(queries.nurse_vitals_details())
+
+
+def _public(item):
+    return {k: item[k] for k in ("id", "title", "type", "sql", "created")}
+
+
+@app.route("/api/custom", methods=["GET"])
+def custom_list():
+    return jsonify([_public(it) for it in custom_store.list_all()])
+
+
+@app.route("/api/custom", methods=["POST"])
+def custom_create():
+    body = request.get_json(force=True, silent=True) or {}
+    title = (body.get("title") or "").strip()
+    qtype = (body.get("type") or "").strip().lower()
+    if not title:
+        return jsonify({"error": "Title is required."}), 400
+    if qtype not in custom.VALID_TYPES:
+        return jsonify({"error": "Invalid report type."}), 400
+    try:
+        sql = custom.clean_sql(body.get("sql") or "")
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    return jsonify(_public(custom_store.add(title, qtype, sql))), 201
+
+
+@app.route("/api/custom/<qid>", methods=["DELETE"])
+def custom_delete(qid):
+    ok = custom_store.delete(qid)
+    return jsonify({"deleted": ok}), (200 if ok else 404)
+
+
+@app.route("/api/custom/<qid>/run")
+def custom_run(qid):
+    item = custom_store.get(qid)
+    if not item:
+        return jsonify({"error": "Report not found."}), 404
+    return jsonify(custom.run_saved(item))
+
+
+@app.route("/api/custom/preview", methods=["POST"])
+def custom_preview():
+    body = request.get_json(force=True, silent=True) or {}
+    qtype = (body.get("type") or "table").strip().lower()
+    if qtype not in custom.VALID_TYPES:
+        qtype = "table"
+    try:
+        cols, rows = custom.run_select(body.get("sql") or "")
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    return jsonify(custom.shape(qtype, cols, rows))
 
 
 @app.errorhandler(Exception)

@@ -24,6 +24,9 @@
       <button class="nav-item" data-view="nurse">
         <span class="nav-ico">&#9827;</span> Nurse Analysis
       </button>
+      <button class="nav-item" data-view="custom">
+        <span class="nav-ico">&#9874;</span> Custom Reports
+      </button>
     </nav>
     <div class="nav-foot">
       <span id="db-dot" class="dot"></span>
@@ -142,11 +145,46 @@
           </table>
         </section>
       </div>
+      <!-- ===================== CUSTOM REPORTS ===================== -->
+      <div id="view-custom" class="view" hidden>
+        <section>
+          <h3 class="section-title">Build a Report</h3>
+          <div class="builder">
+            <div class="builder-row">
+              <input id="cq-title" class="cq-input" placeholder="Report title (e.g. Pharmacy orders today)" />
+              <select id="cq-type" class="cq-input">
+                <option value="card">KPI Card &mdash; single number</option>
+                <option value="table">Table &mdash; rows &amp; columns</option>
+                <option value="bar">Bar chart &mdash; (label, value)</option>
+                <option value="line">Line chart &mdash; (label, value[, series])</option>
+              </select>
+            </div>
+            <textarea id="cq-sql" class="cq-sql" rows="6"
+              placeholder="SELECT a.col1, COUNT(*) AS total&#10;FROM your_table a&#10;JOIN other_table b ON b.id = a.b_id&#10;WHERE TRUNC(a.some_date) = TRUNC(SYSDATE)&#10;GROUP BY a.col1"></textarea>
+            <div class="builder-actions">
+              <button id="cq-preview" class="btn">Preview</button>
+              <button id="cq-save" class="btn primary">Save to menu</button>
+              <span id="cq-msg" class="cq-msg"></span>
+            </div>
+            <p class="cq-hint">Read-only: only a single <code>SELECT</code> (or <code>WITH</code>) is allowed.
+              <b>Card</b> = first value of first row. <b>Bar/Line</b> = 1st column is the label, 2nd is the number
+              (Line: add a 3rd column to split into series). <b>Table</b> = all columns.</p>
+            <div id="cq-preview-area" class="preview-area" hidden></div>
+          </div>
+        </section>
+
+        <section>
+          <h3 class="section-title">Saved Reports</h3>
+          <div id="cq-list" class="report-grid"><p class="muted">No custom reports yet.</p></div>
+        </section>
+      </div>
+
     </main>
   </div>
 </div>
 
   <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
   <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 </html>

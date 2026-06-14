@@ -117,11 +117,16 @@
     await loadHealth();
     if (current === "overview") await loadOverview();
     else if (current === "nurse") await loadNurse();
+    else if (current === "custom" && window.CustomReports) window.CustomReports.load();
     loaded[current] = true;
     stamp();
   }
 
-  var TITLES = { overview: "Registrations & Encounters", nurse: "Nurse Analysis" };
+  var TITLES = {
+    overview: "Registrations & Encounters",
+    nurse: "Nurse Analysis",
+    custom: "Custom Reports",
+  };
 
   function switchView(view) {
     if (view === current) return;

@@ -15,6 +15,14 @@ with multiple dashboards:
 - **Notes vs Vitals** trend (Day / Week / Month / Year)
 - **Vitals details** table (EMR date, MRNO, vital, time, entered-by nurse)
 
+**Custom Reports** (build-your-own)
+- A web page to add your own tiles by writing SQL (any tables / joins you want)
+- Pick a type: **KPI card**, **table**, **bar chart**, or **line chart**, then Preview and Save
+- Saved reports persist in `custom_queries.json` on the server and appear as live tiles
+- **Read-only & safety:** only a single `SELECT`/`WITH` statement is accepted (no `;`,
+  no INSERT/UPDATE/DELETE/DDL/PLSQL) and results are capped at `CUSTOM_MAX_ROWS`.
+  For defense in depth, point the app at a **read-only Oracle account** for this DB.
+
 It reads directly from the Oracle database and is meant to be hosted on an
 internal server so management can open it in any browser on the same network.
 The UI has **no external/CDN dependencies**, so it works on an air-gapped LAN.
