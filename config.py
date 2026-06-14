@@ -57,6 +57,15 @@ class Config:
     # Employee-name lookup function (schema-qualify if needed).
     EMPLOYEE_NAME_FN = os.getenv("EMPLOYEE_NAME_FN", "GET_EMPLOYEE_NAME")
 
+    # ---- Billing objects ---------------------------------------------------
+    BILL_GEN_TABLE = os.getenv("BILL_GEN_TABLE", "GEN_PAT_BILLING")
+    BILL_INV_TABLE = os.getenv("BILL_INV_TABLE", "INV_PAT_BILLING")
+    BILL_CON_TABLE = os.getenv("BILL_CON_TABLE", "CON_PAT_BILLING")
+    BILL_PH_TABLE = os.getenv("BILL_PH_TABLE", "PH_PAT_BILLING")
+    SERVICE_TABLE = os.getenv("SERVICE_TABLE", "INV_MAST_SERVICE")
+    BILL_DATE_COLUMN = os.getenv("BILL_DATE_COLUMN", "BILL_DATE")
+    BILL_AMOUNT_COLUMN = os.getenv("BILL_AMOUNT_COLUMN", "NET_AMOUNT")
+
     # ---- Nurse analysis / EMR objects -------------------------------------
     # A nurse note is considered present when a row exists in the provider
     # visit table (template_type = EMR_VISIT_TEMPLATE_TYPE, isvalid = 1).

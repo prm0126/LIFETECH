@@ -279,6 +279,106 @@ def nurse_vitals_details(limit=50):
     return []
 
 
+# --------------------------------------------------------------------------- #
+# Billing
+# --------------------------------------------------------------------------- #
+def _period_start(period):
+    return {
+        "week": "TRUNC(SYSDATE, 'IW')",
+        "month": "TRUNC(SYSDATE, 'MM')",
+        "year": "TRUNC(SYSDATE, 'YYYY')",
+    }.get(period, "TRUNC(SYSDATE)")
+
+
+def billing_summary():
+    """Today/week/month revenue plus today's source split and discount."""
+    g, inv, ph, con = (Config.BILL_GEN_TABLE, Config.BILL_INV_TABLE,
+                       Config.BILL_PH_TABLE, Config.BILL_CON_TABLE)
+    amt, dcol = Config.BILL_AMOUNT_COLUMN, Config.BILL_DATE_COLUMN
+    sql = f"""
+        SELECT
+          (SELECT ROUND(NVL(SUM({amt}),0),2) FROM {g}
+             WHERE ISVALID=1 AND TRUNC({dcol})=TRUNC(SYSDATE))            AS rev_today,
+          (SELECT ROUND(NVL(SUM({amt}),0),2) FROM {g}
+             WHERE ISVALID=1 AND {dcol} >= TRUNC(SYSDATE,'IW'))           AS rev_week,
+          (SELECT ROUND(NVL(SUM({amt}),0),2) FROM {g}
+             WHERE ISVALID=1 AND {dcol} >= TRUNC(SYSDATE,'MM'))           AS rev_month,
+          (SELECT COUNT(*) FROM {g}
+             WHERE ISVALID=1 AND TRUNC({dcol})=TRUNC(SYSDATE))            AS bills_today,
+          (SELECT ROUND(NVL(SUM(DISCOUNT),0),2) FROM {g}
+             WHERE ISVALID=1 AND TRUNC({dcol})=TRUNC(SYSDATE))            AS discount_today,
+          (SELECT ROUND(NVL(SUM(i.{amt}),0),2) FROM {inv} i
+             JOIN {g} gg ON gg.GEN_PAT_BILLING_ID=i.GEN_PAT_BILLING_ID
+             WHERE i.ISVALID=1 AND gg.ISVALID=1 AND TRUNC(gg.{dcol})=TRUNC(SYSDATE)) AS services_today,
+          (SELECT ROUND(NVL(SUM(p.{amt}),0),2) FROM {ph} p
+             JOIN {g} gg ON gg.GEN_PAT_BILLING_ID=p.GEN_PAT_BILLING_ID
+             WHERE p.ISVALID=1 AND gg.ISVALID=1 AND TRUNC(gg.{dcol})=TRUNC(SYSDATE)) AS pharmacy_today,
+          (SELECT ROUND(NVL(SUM({amt}),0),2) FROM {con}
+             WHERE ISVALID=1 AND TRUNC({dcol})=TRUNC(SYSDATE))            AS consult_today
+        FROM DUAL
+    """
+    return db.query_one(sql) or {}
+
+
+def billing_trend(period):
+    """Net revenue per bucket (day/week/month/year) from the master billing table."""
+    trunc, fmt, window = _bucket(period, Config.BILL_DATE_COLUMN)
+    sql = f"""
+        SELECT TO_CHAR({trunc}, '{fmt}') AS period,
+               ROUND(NVL(SUM({Config.BILL_AMOUNT_COLUMN}),0),2) AS cnt
+        FROM {Config.BILL_GEN_TABLE}
+        WHERE ISVALID=1 AND {window}
+        GROUP BY {trunc}
+        ORDER BY {trunc}
+    """
+    return db.query_all(sql)
+
+
+def billing_by_source(period):
+    """Net revenue split Services / Pharmacy / Consultation for the period-to-date."""
+    g, inv, ph, con = (Config.BILL_GEN_TABLE, Config.BILL_INV_TABLE,
+                       Config.BILL_PH_TABLE, Config.BILL_CON_TABLE)
+    amt, dcol = Config.BILL_AMOUNT_COLUMN, Config.BILL_DATE_COLUMN
+    start = _period_start(period)
+    sql = f"""
+        SELECT 'Services' AS source, ROUND(NVL(SUM(i.{amt}),0),2) AS amount
+        FROM {inv} i JOIN {g} gg ON gg.GEN_PAT_BILLING_ID=i.GEN_PAT_BILLING_ID
+        WHERE i.ISVALID=1 AND gg.ISVALID=1 AND gg.{dcol} >= {start}
+        UNION ALL
+        SELECT 'Pharmacy', ROUND(NVL(SUM(p.{amt}),0),2)
+        FROM {ph} p JOIN {g} gg ON gg.GEN_PAT_BILLING_ID=p.GEN_PAT_BILLING_ID
+        WHERE p.ISVALID=1 AND gg.ISVALID=1 AND gg.{dcol} >= {start}
+        UNION ALL
+        SELECT 'Consultation', ROUND(NVL(SUM({amt}),0),2)
+        FROM {con}
+        WHERE ISVALID=1 AND {dcol} >= {start}
+    """
+    return db.query_all(sql)
+
+
+def billing_top_services(limit=10):
+    """Top services by net revenue this month."""
+    g, inv, svc = Config.BILL_GEN_TABLE, Config.BILL_INV_TABLE, Config.SERVICE_TABLE
+    amt, dcol = Config.BILL_AMOUNT_COLUMN, Config.BILL_DATE_COLUMN
+    sql = f"""
+        SELECT service, amount FROM (
+            SELECT s.NAME AS service, ROUND(NVL(SUM(i.{amt}),0),2) AS amount
+            FROM {inv} i
+            JOIN {g} gg ON gg.GEN_PAT_BILLING_ID=i.GEN_PAT_BILLING_ID
+            JOIN {svc} s ON s.INV_MAST_SERVICE_ID=i.INV_MAST_SERVICE_ID
+            WHERE i.ISVALID=1 AND gg.ISVALID=1 AND s.ISVALID=1
+              AND gg.{dcol} >= TRUNC(SYSDATE,'MM')
+            GROUP BY s.NAME
+            ORDER BY amount DESC
+        ) WHERE ROWNUM <= :limit
+    """
+    try:
+        return db.query_all(sql, {"limit": limit})
+    except Exception as exc:  # noqa: BLE001
+        log.warning("top services unavailable: %s", exc)
+        return []
+
+
 def encounters_by_doctor_today(limit=10):
     """Top providers by encounter count today (uses the employee-name function).
 

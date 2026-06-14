@@ -24,6 +24,9 @@
       <button class="nav-item" data-view="nurse">
         <span class="nav-ico">&#9827;</span> Nurse Analysis
       </button>
+      <button class="nav-item" data-view="billing">
+        <span class="nav-ico">&#9636;</span> Billing
+      </button>
       <button class="nav-item" data-view="custom">
         <span class="nav-ico">&#9874;</span> Custom Reports
       </button>
@@ -149,6 +152,65 @@
           </table>
         </section>
       </div>
+      <!-- ===================== BILLING ===================== -->
+      <div id="view-billing" class="view" hidden>
+        <section>
+          <h3 class="section-title">Revenue</h3>
+          <div class="cards">
+            <div class="card accent-green"><div class="card-label">Revenue Today</div><div class="card-value money" id="bil-today">&mdash;</div></div>
+            <div class="card accent-teal"><div class="card-label">This Week</div><div class="card-value money" id="bil-week">&mdash;</div></div>
+            <div class="card accent-blue"><div class="card-label">This Month</div><div class="card-value money" id="bil-month">&mdash;</div></div>
+            <div class="card accent-grey"><div class="card-label">Bills Today</div><div class="card-value" id="bil-count">&mdash;</div></div>
+          </div>
+        </section>
+        <section>
+          <h3 class="section-title">Today by Source</h3>
+          <div class="cards">
+            <div class="card accent-blue"><div class="card-label">Services</div><div class="card-value money" id="bil-svc">&mdash;</div></div>
+            <div class="card accent-purple"><div class="card-label">Pharmacy</div><div class="card-value money" id="bil-pharm">&mdash;</div></div>
+            <div class="card accent-green"><div class="card-label">Consultation</div><div class="card-value money" id="bil-con">&mdash;</div></div>
+            <div class="card accent-amber"><div class="card-label">Discount Today</div><div class="card-value money" id="bil-disc">&mdash;</div></div>
+          </div>
+        </section>
+        <section>
+          <div class="chart-head">
+            <h3 class="section-title">Revenue Trend</h3>
+            <div class="toggle" data-toggle="billtrend">
+              <button data-period="day" class="active">Day</button>
+              <button data-period="week">Week</button>
+              <button data-period="month">Month</button>
+              <button data-period="year">Year</button>
+            </div>
+          </div>
+          <div class="chart-wrap tall">
+            <canvas id="bil-trend-chart"></canvas>
+            <div id="bil-trend-empty" class="empty" hidden>No billing data for this period.</div>
+          </div>
+        </section>
+        <section>
+          <div class="chart-head">
+            <h3 class="section-title">Revenue by Source</h3>
+            <div class="toggle" data-toggle="billsrc">
+              <button data-period="day" class="active">Today</button>
+              <button data-period="week">Week</button>
+              <button data-period="month">Month</button>
+              <button data-period="year">Year</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="bil-source-chart"></canvas>
+            <div id="bil-source-empty" class="empty" hidden>No billing data for this period.</div>
+          </div>
+        </section>
+        <section>
+          <h3 class="section-title">Top Services by Revenue (this month)</h3>
+          <table class="grid" id="bil-services-table">
+            <thead><tr><th>Service</th><th class="num">Net Amount</th></tr></thead>
+            <tbody><tr><td colspan="2" class="muted">Loading&hellip;</td></tr></tbody>
+          </table>
+        </section>
+      </div>
+
       <!-- ===================== CUSTOM REPORTS ===================== -->
       <div id="view-custom" class="view" hidden>
         <section>

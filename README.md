@@ -15,6 +15,14 @@ with multiple dashboards:
 - **Notes vs Vitals** trend (Day / Week / Month / Year)
 - **Vitals details** table (EMR date, MRNO, vital, time, entered-by nurse)
 
+**Billing**
+- KPI cards: revenue today / this week / this month, bills today, and today's
+  split by **Services / Pharmacy / Consultation** plus discount
+- **Revenue trend** (Day / Week / Month / Year) and **Revenue by source** charts
+- **Top services by revenue** (this month) table
+- Built on `GEN_PAT_BILLING` / `INV_PAT_BILLING` / `CON_PAT_BILLING` / `PH_PAT_BILLING`
+  / `INV_MAST_SERVICE`, using `NET_AMOUNT`, all filtered `ISVALID = 1`
+
 **Custom Reports** (build-your-own)
 - A web page to add your own tiles by writing SQL (any tables / joins you want)
 - Pick a type: **KPI card**, **table**, **bar chart**, or **line chart**, then Preview and Save

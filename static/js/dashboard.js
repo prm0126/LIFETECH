@@ -4,12 +4,17 @@
 
   var REFRESH_MS = 60000;
   var current = "overview";
-  var periods = { reg: "day", doctor: "day", nurse: "day" };
+  var periods = { reg: "day", doctor: "day", nurse: "day", billtrend: "day", billsrc: "day" };
   var charts = {};      // lazily created chart instances
   var loaded = {};      // which views have been loaded at least once
 
   function $(id) { return document.getElementById(id); }
   function setText(id, v) { var el = $(id); if (el) el.textContent = (v === null || v === undefined) ? "—" : v; }
+  function setMoney(id, v) {
+    var el = $(id); if (!el) return;
+    if (v === null || v === undefined) { el.textContent = "—"; return; }
+    el.textContent = Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
 
   async function getJSON(url) {
     var res = await fetch(url, { cache: "no-store" });
@@ -110,6 +115,47 @@
     await Promise.allSettled([loadNurseSummary(), loadNurseChart(), loadVitalsTable()]);
   }
 
+  // ---- billing ----
+  async function loadBillingSummary() {
+    var d = await getJSON("/api/billing/summary");
+    setMoney("bil-today", d.rev_today); setMoney("bil-week", d.rev_week);
+    setMoney("bil-month", d.rev_month); setText("bil-count", d.bills_today);
+    setMoney("bil-svc", d.services_today); setMoney("bil-pharm", d.pharmacy_today);
+    setMoney("bil-con", d.consult_today); setMoney("bil-disc", d.discount_today);
+  }
+
+  async function loadBillingTrend() {
+    var d = await getJSON("/api/billing/trend?period=" + periods.billtrend);
+    if (!charts.billtrend) charts.billtrend = new MiniBarChart($("bil-trend-chart"));
+    var empty = $("bil-trend-empty");
+    var has = d.values && d.values.some(function (v) { return v > 0; });
+    if (!has) { empty.hidden = false; charts.billtrend.render({ labels: [], values: [] }); return; }
+    empty.hidden = true; charts.billtrend.render({ labels: d.labels, values: d.values });
+  }
+
+  async function loadBillingSource() {
+    var d = await getJSON("/api/billing/by-source?period=" + periods.billsrc);
+    if (!charts.billsrc) charts.billsrc = new MiniBarChart($("bil-source-chart"));
+    var empty = $("bil-source-empty");
+    var has = d.values && d.values.some(function (v) { return v > 0; });
+    if (!has) { empty.hidden = false; charts.billsrc.render({ labels: [], values: [] }); return; }
+    empty.hidden = true; charts.billsrc.render({ labels: d.labels, values: d.values });
+  }
+
+  async function loadBillingServices() {
+    var rows = await getJSON("/api/billing/top-services");
+    var tb = $("bil-services-table").querySelector("tbody");
+    if (!rows || rows.length === 0) { tb.innerHTML = '<tr><td colspan="2" class="muted">No services billed this month.</td></tr>'; return; }
+    tb.innerHTML = rows.map(function (r) {
+      return "<tr><td>" + escapeHtml(r.service) + '</td><td class="num">' +
+        Number(r.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "</td></tr>";
+    }).join("");
+  }
+
+  async function loadBilling() {
+    await Promise.allSettled([loadBillingSummary(), loadBillingTrend(), loadBillingSource(), loadBillingServices()]);
+  }
+
   // ---- view orchestration ----
   function stamp() { $("updated").textContent = "Updated " + new Date().toLocaleTimeString(); }
 
@@ -117,6 +163,7 @@
     await loadHealth();
     if (current === "overview") await loadOverview();
     else if (current === "nurse") await loadNurse();
+    else if (current === "billing") await loadBilling();
     else if (current === "custom" && window.CustomReports) window.CustomReports.load();
     loaded[current] = true;
     stamp();
@@ -125,6 +172,7 @@
   var TITLES = {
     overview: "Registrations & Encounters",
     nurse: "Nurse Analysis",
+    billing: "Billing",
     custom: "Custom Reports",
   };
 
@@ -173,6 +221,8 @@
     wireToggle("reg", loadRegChart);
     wireToggle("doctor", loadDoctorChart);
     wireToggle("nurse", loadNurseChart);
+    wireToggle("billtrend", loadBillingTrend);
+    wireToggle("billsrc", loadBillingSource);
     $("refresh-btn").addEventListener("click", refreshActive);
 
     // populate the "My Reports" sidebar menu at startup

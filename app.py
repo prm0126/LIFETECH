@@ -104,6 +104,34 @@ def nurse_vitals():
     return jsonify(queries.nurse_vitals_details())
 
 
+@app.route("/api/billing/summary")
+def billing_summary():
+    return jsonify(queries.billing_summary())
+
+
+@app.route("/api/billing/trend")
+def billing_trend():
+    period = _period_arg()
+    rows = queries.billing_trend(period)
+    return jsonify({"period": period,
+                    "labels": [r["period"] for r in rows],
+                    "values": [r["cnt"] for r in rows]})
+
+
+@app.route("/api/billing/by-source")
+def billing_by_source():
+    period = _period_arg()
+    rows = queries.billing_by_source(period)
+    return jsonify({"period": period,
+                    "labels": [r["source"] for r in rows],
+                    "values": [r["amount"] for r in rows]})
+
+
+@app.route("/api/billing/top-services")
+def billing_top_services():
+    return jsonify(queries.billing_top_services())
+
+
 def _public(item):
     d = {k: item[k] for k in ("id", "title", "type", "sql", "created")}
     d["params"] = custom.required_params(item["sql"])
