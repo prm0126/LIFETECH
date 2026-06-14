@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LIFETECH &mdash; Management Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="app">
+  <!-- Left navigation -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="logo">LT</span>
+      <div>
+        <h1>LIFETECH</h1>
+        <p class="subtitle">Dashboards</p>
+      </div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" data-view="overview">
+        <span class="nav-ico">&#9632;</span> Overview
+      </button>
+      <button class="nav-item" data-view="nurse">
+        <span class="nav-ico">&#9827;</span> Nurse Analysis
+      </button>
+      <button class="nav-item" data-view="billing">
+        <span class="nav-ico">&#9636;</span> Billing
+      </button>
+      <button class="nav-item" data-view="custom">
+        <span class="nav-ico">&#9874;</span> Custom Reports
+      </button>
+      <div id="report-nav-wrap" hidden>
+        <div class="nav-label">My Reports</div>
+        <div id="report-nav"></div>
+      </div>
+    </nav>
+    <div class="nav-foot">
+      <span id="db-dot" class="dot"></span>
+      <span id="db-text">checking&hellip;</span>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <header class="topbar">
+      <h2 id="view-title">Registrations &amp; Encounters</h2>
+      <div class="status">
+        <span id="updated" class="updated"></span>
+        <button id="refresh-btn">Refresh</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- ===================== OVERVIEW ===================== -->
+      <div id="view-overview" class="view">
+        <section>
+          <h3 class="section-title">Total Registrations</h3>
+          <div class="cards">
+            <div class="card accent-blue"><div class="card-label">Today</div><div class="card-value" id="reg-today">&mdash;</div></div>
+            <div class="card accent-teal"><div class="card-label">This Week</div><div class="card-value" id="reg-week">&mdash;</div></div>
+            <div class="card accent-purple"><div class="card-label">This Month</div><div class="card-value" id="reg-month">&mdash;</div></div>
+            <div class="card accent-grey"><div class="card-label">All Time</div><div class="card-value" id="reg-total">&mdash;</div></div>
+          </div>
+        </section>
+
+        <section>
+          <h3 class="section-title">Encounters Created Today</h3>
+          <div class="cards">
+            <div class="card accent-blue"><div class="card-label">Total</div><div class="card-value" id="enc-total">&mdash;</div></div>
+            <div class="card accent-red"><div class="card-label">Urgent Care</div><div class="card-value" id="enc-urgent">&mdash;</div></div>
+            <div class="card accent-green"><div class="card-label">Consult</div><div class="card-value" id="enc-consult">&mdash;</div></div>
+            <div class="card accent-amber"><div class="card-label">Non-Consult</div><div class="card-value" id="enc-nonconsult">&mdash;</div></div>
+            <div class="card accent-teal"><div class="card-label">Consulted</div><div class="card-value" id="enc-consulted">&mdash;</div></div>
+          </div>
+        </section>
+
+        <section>
+          <div class="chart-head">
+            <h3 class="section-title">Registration Trend</h3>
+            <div class="toggle" data-toggle="reg">
+              <button data-period="day" class="active">Day</button>
+              <button data-period="week">Week</button>
+              <button data-period="month">Month</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="reg-chart"></canvas>
+            <div id="reg-empty" class="empty" hidden>No data for this period.</div>
+          </div>
+        </section>
+
+        <section>
+          <div class="chart-head">
+            <h3 class="section-title">Doctor-wise Encounters (Trend)</h3>
+            <div class="toggle" data-toggle="doctor">
+              <button data-period="day" class="active">Day</button>
+              <button data-period="week">Week</button>
+              <button data-period="month">Month</button>
+              <button data-period="year">Year</button>
+            </div>
+          </div>
+          <div class="chart-wrap tall">
+            <canvas id="doctor-chart"></canvas>
+            <div id="doctor-empty" class="empty" hidden>No encounter data for this period.</div>
+          </div>
+        </section>
+
+        <section>
+          <h3 class="section-title">Today&rsquo;s Encounters by Provider</h3>
+          <table class="grid" id="doctor-table">
+            <thead><tr><th>Provider</th><th class="num">Encounters</th></tr></thead>
+            <tbody><tr><td colspan="2" class="muted">Loading&hellip;</td></tr></tbody>
+          </table>
+        </section>
+      </div>
+
+      <!-- ===================== NURSE ANALYSIS ===================== -->
+      <div id="view-nurse" class="view" hidden>
+        <section>
+          <h3 class="section-title">Nurse Activity Today</h3>
+          <div class="cards">
+            <div class="card accent-purple"><div class="card-label">Patients w/ Notes</div><div class="card-value" id="nur-notes">&mdash;</div></div>
+            <div class="card accent-blue"><div class="card-label">Patients w/ Vitals</div><div class="card-value" id="nur-vpat">&mdash;</div></div>
+            <div class="card accent-teal"><div class="card-label">Vitals Records</div><div class="card-value" id="nur-vrec">&mdash;</div></div>
+            <div class="card accent-green"><div class="card-label">Nurses Active</div><div class="card-value" id="nur-active">&mdash;</div></div>
+          </div>
+        </section>
+
+        <section>
+          <div class="chart-head">
+            <h3 class="section-title">Notes vs Vitals Trend</h3>
+            <div class="toggle" data-toggle="nurse">
+              <button data-period="day" class="active">Day</button>
+              <button data-period="week">Week</button>
+              <button data-period="month">Month</button>
+              <button data-period="year">Year</button>
+            </div>
+          </div>
+          <div class="chart-wrap tall">
+            <canvas id="nurse-chart"></canvas>
+            <div id="nurse-empty" class="empty" hidden>No nurse data for this period.</div>
+          </div>
+        </section>
+
+        <section>
+          <h3 class="section-title">Vitals Entered Today (details)</h3>
+          <table class="grid" id="vitals-table">
+            <thead><tr>
+              <th>EMR Date</th><th>MRNO</th><th>Vital</th><th>Entered At</th><th>Entered By</th>
+            </tr></thead>
+            <tbody><tr><td colspan="5" class="muted">Loading&hellip;</td></tr></tbody>
+          </table>
+        </section>
+      </div>
+      <!-- ===================== BILLING ===================== -->
+      <div id="view-billing" class="view" hidden>
+        <section>
+          <h3 class="section-title">Revenue</h3>
+          <div class="cards">
+            <div class="card accent-green"><div class="card-label">Revenue Today</div><div class="card-value money" id="bil-today">&mdash;</div></div>
+            <div class="card accent-teal"><div class="card-label">This Week</div><div class="card-value money" id="bil-week">&mdash;</div></div>
+            <div class="card accent-blue"><div class="card-label">This Month</div><div class="card-value money" id="bil-month">&mdash;</div></div>
+            <div class="card accent-grey"><div class="card-label">Bills Today</div><div class="card-value" id="bil-count">&mdash;</div></div>
+          </div>
+        </section>
+        <section>
+          <h3 class="section-title">Today by Source</h3>
+          <div class="cards">
+            <div class="card accent-blue"><div class="card-label">Services</div><div class="card-value money" id="bil-svc">&mdash;</div></div>
+            <div class="card accent-purple"><div class="card-label">Pharmacy</div><div class="card-value money" id="bil-pharm">&mdash;</div></div>
+            <div class="card accent-green"><div class="card-label">Consultation</div><div class="card-value money" id="bil-con">&mdash;</div></div>
+            <div class="card accent-amber"><div class="card-label">Discount Today</div><div class="card-value money" id="bil-disc">&mdash;</div></div>
+          </div>
+        </section>
+        <section>
+          <div class="chart-head">
+            <h3 class="section-title">Revenue Trend</h3>
+            <div class="toggle" data-toggle="billtrend">
+              <button data-period="day" class="active">Day</button>
+              <button data-period="week">Week</button>
+              <button data-period="month">Month</button>
+              <button data-period="year">Year</button>
+            </div>
+          </div>
+          <div class="chart-wrap tall">
+            <canvas id="bil-trend-chart"></canvas>
+            <div id="bil-trend-empty" class="empty" hidden>No billing data for this period.</div>
+          </div>
+        </section>
+        <section>
+          <div class="chart-head">
+            <h3 class="section-title">Revenue by Source</h3>
+            <div class="toggle" data-toggle="billsrc">
+              <button data-period="day" class="active">Today</button>
+              <button data-period="week">Week</button>
+              <button data-period="month">Month</button>
+              <button data-period="year">Year</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="bil-source-chart"></canvas>
+            <div id="bil-source-empty" class="empty" hidden>No billing data for this period.</div>
+          </div>
+        </section>
+        <section>
+          <h3 class="section-title">Top Services by Revenue (this month)</h3>
+          <table class="grid" id="bil-services-table">
+            <thead><tr><th>Service</th><th class="num">Net Amount</th></tr></thead>
+            <tbody><tr><td colspan="2" class="muted">Loading&hellip;</td></tr></tbody>
+          </table>
+        </section>
+      </div>
+
+      <!-- ===================== CUSTOM REPORTS ===================== -->
+      <div id="view-custom" class="view" hidden>
+        <section>
+          <h3 class="section-title">Build a Report</h3>
+          <div class="builder">
+            <div id="cq-edit-banner" class="edit-banner" hidden>
+              <span>Editing: <b id="cq-edit-name"></b></span>
+              <button id="cq-edit-cancel" type="button">Cancel &amp; create new</button>
+            </div>
+            <div class="builder-row">
+              <input id="cq-title" class="cq-input" placeholder="Report title (e.g. Pharmacy orders today)" />
+              <select id="cq-type" class="cq-input">
+                <option value="card">KPI Card &mdash; single number</option>
+                <option value="table">Table &mdash; rows &amp; columns</option>
+                <option value="bar">Bar chart &mdash; (label, value)</option>
+                <option value="line">Line chart &mdash; (label, value[, series])</option>
+              </select>
+            </div>
+            <textarea id="cq-sql" class="cq-sql" rows="6"
+              placeholder="SELECT a.col1, COUNT(*) AS total&#10;FROM your_table a&#10;JOIN other_table b ON b.id = a.b_id&#10;WHERE TRUNC(a.some_date) = TRUNC(SYSDATE)&#10;GROUP BY a.col1"></textarea>
+            <div class="builder-actions">
+              <button id="cq-preview" class="btn">Preview</button>
+              <button id="cq-save" class="btn primary">Save to menu</button>
+              <button id="cq-seed" class="btn">Load sample billing reports</button>
+              <span id="cq-msg" class="cq-msg"></span>
+            </div>
+            <p class="cq-hint">Read-only: only a single <code>SELECT</code> (or <code>WITH</code>) is allowed.
+              <b>Card</b> = first value of first row. <b>Bar/Line</b> = 1st column is the label, 2nd is the number
+              (Line: add a 3rd column to split into series). <b>Table</b> = all columns.<br>
+              <b>Interactive:</b> use <code>:date_from</code>, <code>:date_to</code> and <code>:gran</code>
+              (granularity for <code>TRUNC</code>) and the report shows live Daily/Weekly/Monthly + date controls.</p>
+            <div id="cq-params" class="param-bar" hidden></div>
+            <div id="cq-preview-area" class="preview-area" hidden></div>
+          </div>
+        </section>
+
+        <section>
+          <h3 class="section-title">Saved Reports</h3>
+          <div id="cq-list" class="report-grid"><p class="muted">No custom reports yet.</p></div>
+        </section>
+      </div>
+
+      <!-- ===================== SINGLE REPORT (from My Reports) ============ -->
+      <div id="view-report" class="view" hidden>
+        <section>
+          <div class="report-head">
+            <h3 id="rv-title" class="section-title" style="margin:0"></h3>
+            <div class="rv-actions">
+              <button id="rv-refresh" class="btn">Refresh</button>
+              <button id="rv-edit" class="btn">Edit</button>
+              <button id="rv-del" class="btn">Delete</button>
+            </div>
+          </div>
+          <div id="rv-params" class="param-bar" hidden style="margin-top:12px"></div>
+          <div id="rv-body" class="builder" style="margin-top:14px"></div>
+        </section>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+  <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
