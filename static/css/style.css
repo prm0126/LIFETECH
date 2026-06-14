@@ -95,6 +95,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 24px 28px 60px; }
 .chart-wrap.tall { height: 400px; }
 .chart-wrap canvas { width: 100%; height: 100%; }
 .empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); }
+.empty[hidden] { display: none; }
 
 /* Table */
 .grid { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); }
