@@ -20,6 +20,17 @@ with multiple dashboards:
 - Pick a type: **KPI card**, **table**, **bar chart**, or **line chart**, then Preview and Save
 - Saved reports persist in `custom_queries.json` on the server and appear as live tiles
 - Each saved report also appears in the **left menu (My Reports)** as its own page, where it can be **refreshed, edited or deleted**
+- **Interactive parameters:** if the SQL uses `:date_from`, `:date_to` or `:gran`
+  (granularity for `TRUNC` &mdash; `'DD'`/`'IW'`/`'MM'`/`'YYYY'`), the report shows live
+  **Daily/Weekly/Monthly/Yearly** + **date-range** controls and re-runs filtered (fast,
+  no full-history scan). Example:
+  ```sql
+  SELECT TO_CHAR(TRUNC(EMR_DATE, :gran), 'YYYY-MM-DD') AS period, COUNT(*) AS notes
+  FROM EMR_PROVIDER_VISIT
+  WHERE TEMPLATE_TYPE = 1 AND ISVALID = 1
+    AND EMR_DATE >= :date_from AND EMR_DATE < :date_to + 1
+  GROUP BY TRUNC(EMR_DATE, :gran) ORDER BY 1
+  ```
 - **Read-only & safety:** only a single `SELECT`/`WITH` statement is accepted (no `;`,
   no INSERT/UPDATE/DELETE/DDL/PLSQL) and results are capped at `CUSTOM_MAX_ROWS`.
   For defense in depth, point the app at a **read-only Oracle account** for this DB.

@@ -104,7 +104,9 @@ def nurse_vitals():
 
 
 def _public(item):
-    return {k: item[k] for k in ("id", "title", "type", "sql", "created")}
+    d = {k: item[k] for k in ("id", "title", "type", "sql", "created")}
+    d["params"] = custom.required_params(item["sql"])
+    return d
 
 
 @app.route("/api/custom", methods=["GET"])
@@ -123,6 +125,7 @@ def custom_create():
         return jsonify({"error": "Invalid report type."}), 400
     try:
         sql = custom.clean_sql(body.get("sql") or "")
+        custom.validate_params(sql)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     return jsonify(_public(custom_store.add(title, qtype, sql))), 201
@@ -139,6 +142,7 @@ def custom_update(qid):
         return jsonify({"error": "Invalid report type."}), 400
     try:
         sql = custom.clean_sql(body.get("sql") or "")
+        custom.validate_params(sql)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     updated = custom_store.update(qid, title, qtype, sql)
@@ -158,7 +162,7 @@ def custom_run(qid):
     item = custom_store.get(qid)
     if not item:
         return jsonify({"error": "Report not found."}), 404
-    return jsonify(custom.run_saved(item))
+    return jsonify(custom.run_saved(item, request.args))
 
 
 @app.route("/api/custom/preview", methods=["POST"])
@@ -167,11 +171,16 @@ def custom_preview():
     qtype = (body.get("type") or "table").strip().lower()
     if qtype not in custom.VALID_TYPES:
         qtype = "table"
+    sql = body.get("sql") or ""
     try:
-        cols, rows = custom.run_select(body.get("sql") or "")
+        custom.validate_params(sql)
+        binds = custom.build_binds(sql, body.get("params") or {})
+        cols, rows = custom.run_select(sql, binds=binds)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
-    return jsonify(custom.shape(qtype, cols, rows))
+    data = custom.shape(qtype, cols, rows)
+    data["params"] = custom.required_params(sql)
+    return jsonify(data)
 
 
 @app.errorhandler(Exception)

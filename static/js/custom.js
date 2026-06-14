@@ -4,8 +4,62 @@ window.CustomReports = (function () {
 
   var cache = [];        // last-known list of report metadata
   var editingId = null;  // when set, Save performs an update
+  var previewVals = null;     // interactive param values for the builder preview
+  var reportVals = {};        // interactive param values per saved report id
+  var SUPPORTED = ["date_from", "date_to", "gran"];
 
   function $(id) { return document.getElementById(id); }
+
+  function detectParams(sql) {
+    var found = {};
+    (sql || "").replace(/(^|[^:\w]):([A-Za-z_][A-Za-z0-9_]*)/g, function (m, pre, name) {
+      found[name.toLowerCase()] = 1; return m;
+    });
+    return SUPPORTED.filter(function (p) { return found[p]; });
+  }
+
+  function defaultVals() {
+    var to = new Date(), from = new Date();
+    from.setDate(from.getDate() - 30);
+    var fmt = function (d) { return d.toISOString().slice(0, 10); };
+    return { date_from: fmt(from), date_to: fmt(to), gran: "DD" };
+  }
+
+  function dateInput(label, vals, key, onRun) {
+    var wrap = document.createElement("label"); wrap.className = "param-date";
+    wrap.appendChild(document.createTextNode(label + " "));
+    var inp = document.createElement("input"); inp.type = "date"; inp.value = vals[key] || "";
+    inp.addEventListener("change", function () { vals[key] = inp.value; onRun(); });
+    wrap.appendChild(inp); return wrap;
+  }
+
+  function buildParamBar(el, params, vals, onRun) {
+    el.innerHTML = "";
+    if (!params || params.length === 0) { el.hidden = true; return; }
+    el.hidden = false;
+    if (params.indexOf("gran") >= 0) {
+      var grp = document.createElement("div"); grp.className = "toggle";
+      [["DD", "Daily"], ["IW", "Weekly"], ["MM", "Monthly"], ["YYYY", "Yearly"]].forEach(function (o) {
+        var b = document.createElement("button"); b.textContent = o[1];
+        if (vals.gran === o[0]) b.className = "active";
+        b.addEventListener("click", function () {
+          vals.gran = o[0];
+          grp.querySelectorAll("button").forEach(function (x) { x.classList.remove("active"); });
+          b.classList.add("active"); onRun();
+        });
+        grp.appendChild(b);
+      });
+      el.appendChild(grp);
+    }
+    if (params.indexOf("date_from") >= 0) el.appendChild(dateInput("From", vals, "date_from", onRun));
+    if (params.indexOf("date_to") >= 0) el.appendChild(dateInput("To", vals, "date_to", onRun));
+  }
+
+  function paramQuery(vals) {
+    return "?date_from=" + encodeURIComponent(vals.date_from || "") +
+           "&date_to=" + encodeURIComponent(vals.date_to || "") +
+           "&gran=" + encodeURIComponent(vals.gran || "DD");
+  }
 
   function escapeHtml(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
@@ -48,7 +102,11 @@ window.CustomReports = (function () {
       var hasData = data.type === "bar"
         ? (data.values && data.values.length)
         : (data.series && data.series.some(function (s) { return s.values && s.values.length; }));
-      if (!hasData) { container.innerHTML = '<p class="muted">No data.</p>'; return; }
+      if (data.note) {
+        var n = document.createElement("div"); n.className = "cq-note"; n.textContent = data.note;
+        container.appendChild(n);
+      }
+      if (!hasData) { container.appendChild(Object.assign(document.createElement("p"), { className: "muted", textContent: "No data." })); return; }
       var wrap = document.createElement("div");
       wrap.className = "report-canvas";
       var cv = document.createElement("canvas");
@@ -62,9 +120,10 @@ window.CustomReports = (function () {
     container.innerHTML = '<p class="muted">Unknown report type.</p>';
   }
 
-  async function runInto(id, el) {
+  async function runInto(id, el, vals) {
     el.innerHTML = '<p class="muted">Loading…</p>';
-    try { renderShaped(el, await api("/api/custom/" + id + "/run")); }
+    var qs = vals ? paramQuery(vals) : "";
+    try { renderShaped(el, await api("/api/custom/" + id + "/run" + qs)); }
     catch (e) { el.innerHTML = '<div class="report-err">' + escapeHtml(e.message) + "</div>"; }
   }
 
@@ -79,13 +138,26 @@ window.CustomReports = (function () {
     if (banner && item) $("cq-edit-name").textContent = item.title;
   }
 
-  function clearForm() { $("cq-title").value = ""; $("cq-sql").value = ""; $("cq-preview-area").hidden = true; setEditing(null); }
+  function clearForm() {
+    $("cq-title").value = ""; $("cq-sql").value = "";
+    $("cq-preview-area").hidden = true; $("cq-params").hidden = true;
+    setEditing(null);
+  }
 
-  async function preview() {
+  async function doPreview() {
     var area = $("cq-preview-area");
     area.hidden = false; area.innerHTML = '<p class="muted">Running…</p>'; msg("");
-    try { renderShaped(area, await send("POST", "/api/custom/preview", { sql: $("cq-sql").value, type: $("cq-type").value })); }
-    catch (e) { area.innerHTML = '<div class="report-err">' + escapeHtml(e.message) + "</div>"; }
+    try {
+      renderShaped(area, await send("POST", "/api/custom/preview", {
+        sql: $("cq-sql").value, type: $("cq-type").value, params: previewVals || {},
+      }));
+    } catch (e) { area.innerHTML = '<div class="report-err">' + escapeHtml(e.message) + "</div>"; }
+  }
+
+  function preview() {
+    if (!previewVals) previewVals = defaultVals();
+    buildParamBar($("cq-params"), detectParams($("cq-sql").value), previewVals, doPreview);
+    doPreview();
   }
 
   async function save() {
@@ -123,8 +195,13 @@ window.CustomReports = (function () {
     document.querySelectorAll(".report-nav-item").forEach(function (b) { b.classList.remove("active"); });
     if (navBtn) navBtn.classList.add("active");
     else { var el = document.querySelector('.report-nav-item[data-report-id="' + id + '"]'); if (el) el.classList.add("active"); }
-    runInto(id, $("rv-body"));
-    $("rv-refresh").onclick = function () { runInto(id, $("rv-body")); };
+
+    var params = item.params || detectParams(item.sql);
+    var vals = reportVals[id] || (reportVals[id] = defaultVals());
+    var run = function () { runInto(id, $("rv-body"), vals); };
+    buildParamBar($("rv-params"), params, vals, run);
+    run();
+    $("rv-refresh").onclick = run;
     $("rv-edit").onclick = function () { startEdit(item); };
     $("rv-del").onclick = function () { removeReport(id); };
   }

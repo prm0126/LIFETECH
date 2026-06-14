@@ -176,7 +176,10 @@
             </div>
             <p class="cq-hint">Read-only: only a single <code>SELECT</code> (or <code>WITH</code>) is allowed.
               <b>Card</b> = first value of first row. <b>Bar/Line</b> = 1st column is the label, 2nd is the number
-              (Line: add a 3rd column to split into series). <b>Table</b> = all columns.</p>
+              (Line: add a 3rd column to split into series). <b>Table</b> = all columns.<br>
+              <b>Interactive:</b> use <code>:date_from</code>, <code>:date_to</code> and <code>:gran</code>
+              (granularity for <code>TRUNC</code>) and the report shows live Daily/Weekly/Monthly + date controls.</p>
+            <div id="cq-params" class="param-bar" hidden></div>
             <div id="cq-preview-area" class="preview-area" hidden></div>
           </div>
         </section>
@@ -198,6 +201,7 @@
               <button id="rv-del" class="btn">Delete</button>
             </div>
           </div>
+          <div id="rv-params" class="param-bar" hidden style="margin-top:12px"></div>
           <div id="rv-body" class="builder" style="margin-top:14px"></div>
         </section>
       </div>
