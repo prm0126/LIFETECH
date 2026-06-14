@@ -45,10 +45,10 @@ class Config:
     # Registration source (patient demographics). Used for day/week/month
     # registration counts via its date column.
     REG_TABLE = os.getenv("REG_TABLE", "PAT_PATIENT_DEMOGRAPHICS")
-    REG_DATE_COLUMN = os.getenv("REG_DATE_COLUMN", "VISIT_DATE")
+    REG_DATE_COLUMN = os.getenv("REG_DATE_COLUMN", "REGISTERED_SINCE")
 
     # Encounter source.
-    ENC_TABLE = os.getenv("ENC_TABLE", "PAT_FIN_ENCOUNTER_DETAILS")
+    ENC_TABLE = os.getenv("ENC_TABLE", "PAT_FIN_ENCOUNTER")
     ENC_DATE_COLUMN = os.getenv("ENC_DATE_COLUMN", "START_DATE")
 
     # Only count valid (not-cancelled) encounters when True.
