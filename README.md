@@ -130,7 +130,27 @@ Then management opens **`http://<server-ip>:8080/`** from their browser
 
 > If a firewall is enabled on the host, allow inbound TCP on the chosen port.
 
-## API endpoints
+## Share on the network (let others open it from their PCs)
+
+1. **Keep the app running** on the server (`run.bat` / `python serve.py`). It already
+   listens on all interfaces (`0.0.0.0:8080`).
+2. **Open the firewall once:** right-click **`open-firewall.bat`** → *Run as administrator*
+   (adds an inbound rule for TCP 8080 and prints this machine's IP).
+3. **Find the server IP:** run `ipconfig` and note the **IPv4 Address** (e.g. `192.168.129.x`).
+4. **Share the URL:** anyone on the same network opens **`http://<server-ip>:8080/`** in a browser.
+
+To always-on it (survive logoff/reboot) run it as a Windows service or a Task
+Scheduler task at startup — see "Keep it running 24/7" below.
+
+### Keep it running 24/7
+- **Task Scheduler (built-in):** create a task → trigger *At startup* → action
+  *Start a program* → `D:\VERDAN-MONITOR\LIFETECH\.venv\Scripts\python.exe` with argument
+  `serve.py` and *Start in* `D:\VERDAN-MONITOR\LIFETECH` → check *Run whether user is
+  logged on or not* and *Run with highest privileges*.
+- **As a service (NSSM):** `nssm install LIFETECH "D:\VERDAN-MONITOR\LIFETECH\.venv\Scripts\python.exe" serve.py`
+  then set *Startup directory* to the project folder and start the service.
+
+
 
 | Endpoint                       | Description                              |
 |--------------------------------|------------------------------------------|
