@@ -148,17 +148,25 @@ def _pivot(rows, key, label, value, top_n):
 
 
 def encounters_doctor_trend(period):
-    """Encounters over time split by doctor (multi-series). period: day/week/month/year."""
+    """Encounters over time split by doctor (multi-series). period: day/week/month/year.
+
+    Aggregates by raw PROVIDER_ID first (uses the date index, no per-row function
+    calls), then resolves the employee name once per aggregated group.
+    """
     trunc, fmt, window = _bucket(period, Config.ENC_DATE_COLUMN)
     sql = f"""
-        SELECT TO_CHAR({trunc}, '{fmt}')                              AS period,
-               NVL({Config.EMPLOYEE_NAME_FN}(PROVIDER_ID), PROVIDER_ID) AS doctor,
-               COUNT(*)                                               AS cnt
-        FROM {Config.ENC_TABLE}
-        WHERE {window}{_enc_valid_clause()}
-          AND PROVIDER_ID IS NOT NULL
-        GROUP BY TO_CHAR({trunc}, '{fmt}'),
-                 NVL({Config.EMPLOYEE_NAME_FN}(PROVIDER_ID), PROVIDER_ID)
+        SELECT period,
+               NVL({Config.EMPLOYEE_NAME_FN}(provider_id), provider_id) AS doctor,
+               cnt
+        FROM (
+            SELECT TO_CHAR({trunc}, '{fmt}') AS period,
+                   PROVIDER_ID              AS provider_id,
+                   COUNT(*)                 AS cnt
+            FROM {Config.ENC_TABLE}
+            WHERE {window}{_enc_valid_clause()}
+              AND PROVIDER_ID IS NOT NULL
+            GROUP BY TO_CHAR({trunc}, '{fmt}'), PROVIDER_ID
+        )
         ORDER BY period
     """
     try:
@@ -277,15 +285,18 @@ def encounters_by_doctor_today(limit=10):
     Degrades gracefully if the function or PROVIDER_ID is unavailable.
     """
     sql = f"""
-        SELECT doctor, cnt FROM (
-            SELECT NVL({Config.EMPLOYEE_NAME_FN}(PROVIDER_ID), PROVIDER_ID) AS doctor,
-                   COUNT(*)                                                 AS cnt
-            FROM {Config.ENC_TABLE}
-            WHERE TRUNC({Config.ENC_DATE_COLUMN}) = TRUNC(SYSDATE){_enc_valid_clause()}
-              AND PROVIDER_ID IS NOT NULL
-            GROUP BY PROVIDER_ID
-            ORDER BY COUNT(*) DESC
-        ) WHERE ROWNUM <= :limit
+        SELECT NVL({Config.EMPLOYEE_NAME_FN}(provider_id), provider_id) AS doctor, cnt
+        FROM (
+            SELECT provider_id, cnt FROM (
+                SELECT PROVIDER_ID AS provider_id, COUNT(*) AS cnt
+                FROM {Config.ENC_TABLE}
+                WHERE TRUNC({Config.ENC_DATE_COLUMN}) = TRUNC(SYSDATE){_enc_valid_clause()}
+                  AND PROVIDER_ID IS NOT NULL
+                GROUP BY PROVIDER_ID
+                ORDER BY COUNT(*) DESC
+            ) WHERE ROWNUM <= :limit
+        )
+        ORDER BY cnt DESC
     """
     try:
         return db.query_all(sql, {"limit": limit})
