@@ -66,6 +66,17 @@ def get(qid):
     return None
 
 
+def update(qid, title, qtype, sql):
+    with _lock:
+        items = _read()
+        for it in items:
+            if it["id"] == qid:
+                it["title"], it["type"], it["sql"] = title, qtype, sql
+                _write(items)
+                return it
+    return None
+
+
 def delete(qid):
     with _lock:
         items = _read()

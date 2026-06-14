@@ -19,6 +19,7 @@ with multiple dashboards:
 - A web page to add your own tiles by writing SQL (any tables / joins you want)
 - Pick a type: **KPI card**, **table**, **bar chart**, or **line chart**, then Preview and Save
 - Saved reports persist in `custom_queries.json` on the server and appear as live tiles
+- Each saved report also appears in the **left menu (My Reports)** as its own page, where it can be **refreshed, edited or deleted**
 - **Read-only & safety:** only a single `SELECT`/`WITH` statement is accepted (no `;`,
   no INSERT/UPDATE/DELETE/DDL/PLSQL) and results are capped at `CUSTOM_MAX_ROWS`.
   For defense in depth, point the app at a **read-only Oracle account** for this DB.

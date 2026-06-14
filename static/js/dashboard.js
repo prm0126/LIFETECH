@@ -134,11 +134,25 @@
     document.querySelectorAll(".nav-item").forEach(function (b) {
       b.classList.toggle("active", b.dataset.view === view);
     });
+    document.querySelectorAll(".report-nav-item").forEach(function (b) { b.classList.remove("active"); });
     document.querySelectorAll(".view").forEach(function (v) { v.hidden = true; });
     $("view-" + view).hidden = false;
     $("view-title").textContent = TITLES[view] || "";
     refreshActive();
   }
+
+  // Exposed so custom.js can open a single-report view and manage nav state.
+  window.Dash = {
+    openView: function (viewId, title) {
+      current = viewId;
+      document.querySelectorAll(".nav-item").forEach(function (b) { b.classList.remove("active"); });
+      document.querySelectorAll(".report-nav-item").forEach(function (b) { b.classList.remove("active"); });
+      document.querySelectorAll(".view").forEach(function (v) { v.hidden = true; });
+      $("view-" + viewId).hidden = false;
+      $("view-title").textContent = title || "";
+      stamp();
+    },
+  };
 
   function wireToggle(name, onChange) {
     var box = document.querySelector('[data-toggle="' + name + '"]');
@@ -160,6 +174,9 @@
     wireToggle("doctor", loadDoctorChart);
     wireToggle("nurse", loadNurseChart);
     $("refresh-btn").addEventListener("click", refreshActive);
+
+    // populate the "My Reports" sidebar menu at startup
+    if (window.CustomReports && window.CustomReports.refreshNav) window.CustomReports.refreshNav();
 
     refreshActive();
     setInterval(refreshActive, REFRESH_MS);

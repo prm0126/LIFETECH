@@ -27,6 +27,10 @@
       <button class="nav-item" data-view="custom">
         <span class="nav-ico">&#9874;</span> Custom Reports
       </button>
+      <div id="report-nav-wrap" hidden>
+        <div class="nav-label">My Reports</div>
+        <div id="report-nav"></div>
+      </div>
     </nav>
     <div class="nav-foot">
       <span id="db-dot" class="dot"></span>
@@ -150,6 +154,10 @@
         <section>
           <h3 class="section-title">Build a Report</h3>
           <div class="builder">
+            <div id="cq-edit-banner" class="edit-banner" hidden>
+              <span>Editing: <b id="cq-edit-name"></b></span>
+              <button id="cq-edit-cancel" type="button">Cancel &amp; create new</button>
+            </div>
             <div class="builder-row">
               <input id="cq-title" class="cq-input" placeholder="Report title (e.g. Pharmacy orders today)" />
               <select id="cq-type" class="cq-input">
@@ -176,6 +184,21 @@
         <section>
           <h3 class="section-title">Saved Reports</h3>
           <div id="cq-list" class="report-grid"><p class="muted">No custom reports yet.</p></div>
+        </section>
+      </div>
+
+      <!-- ===================== SINGLE REPORT (from My Reports) ============ -->
+      <div id="view-report" class="view" hidden>
+        <section>
+          <div class="report-head">
+            <h3 id="rv-title" class="section-title" style="margin:0"></h3>
+            <div class="rv-actions">
+              <button id="rv-refresh" class="btn">Refresh</button>
+              <button id="rv-edit" class="btn">Edit</button>
+              <button id="rv-del" class="btn">Delete</button>
+            </div>
+          </div>
+          <div id="rv-body" class="builder" style="margin-top:14px"></div>
         </section>
       </div>
 

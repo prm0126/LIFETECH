@@ -128,6 +128,25 @@ def custom_create():
     return jsonify(_public(custom_store.add(title, qtype, sql))), 201
 
 
+@app.route("/api/custom/<qid>", methods=["PUT"])
+def custom_update(qid):
+    body = request.get_json(force=True, silent=True) or {}
+    title = (body.get("title") or "").strip()
+    qtype = (body.get("type") or "").strip().lower()
+    if not title:
+        return jsonify({"error": "Title is required."}), 400
+    if qtype not in custom.VALID_TYPES:
+        return jsonify({"error": "Invalid report type."}), 400
+    try:
+        sql = custom.clean_sql(body.get("sql") or "")
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    updated = custom_store.update(qid, title, qtype, sql)
+    if not updated:
+        return jsonify({"error": "Report not found."}), 404
+    return jsonify(_public(updated))
+
+
 @app.route("/api/custom/<qid>", methods=["DELETE"])
 def custom_delete(qid):
     ok = custom_store.delete(qid)
