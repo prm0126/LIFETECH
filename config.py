@@ -9,7 +9,11 @@ import os
 
 from dotenv import load_dotenv
 
-load_dotenv()
+# Resolve paths relative to this file so the app works no matter what the
+# current working directory is (e.g. when launched by a Windows service /
+# Task Scheduler, which starts in C:\Windows\System32).
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(APP_DIR, ".env"))
 
 
 def _as_bool(value, default=False):
@@ -91,7 +95,7 @@ class Config:
 
     # ---- Custom reports (web query builder) -------------------------------
     # File where user-defined reports are saved (created automatically).
-    CUSTOM_STORE_FILE = os.getenv("CUSTOM_STORE_FILE", "custom_queries.json")
+    CUSTOM_STORE_FILE = os.getenv("CUSTOM_STORE_FILE", os.path.join(APP_DIR, "custom_queries.json"))
     # Max rows fetched per custom query (safety cap).
     CUSTOM_MAX_ROWS = int(os.getenv("CUSTOM_MAX_ROWS", "500"))
 
