@@ -117,6 +117,18 @@
       ctx.fill();
     });
 
+    // value label on top of each bar (skipped only when far too narrow)
+    ctx.fillStyle = "#1f2a44";
+    ctx.font = "10px -apple-system, Segoe UI, Roboto, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    bars.forEach((b) => {
+      if (b.w < 10) return;
+      const txt = formatVal(b.val);
+      if (ctx.measureText(txt).width > b.w + 8) return;
+      ctx.fillText(txt, b.x + b.w / 2, Math.max(b.y - 3, 10));
+    });
+
     // x labels (thinned to avoid overlap)
     ctx.fillStyle = COLORS.axis;
     ctx.textAlign = "center";
@@ -187,6 +199,11 @@
     ctx.arcTo(x, y + h, x, y, r);
     ctx.arcTo(x, y, x + w, y, r);
     ctx.closePath();
+  }
+
+  function formatVal(v) {
+    var n = Math.round(v);
+    return n.toLocaleString();
   }
 
   function shortLabel(l) {
