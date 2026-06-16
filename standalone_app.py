@@ -11,7 +11,7 @@ What it does:
   4. Update a single chosen column to 1 or 0 for every matching row.
 
 How to run (Windows PowerShell):
-    py -m pip install flask python-oracledb
+    py -m pip install flask oracledb
     py app.py
 Then open http://127.0.0.1:5000 in a browser.
 

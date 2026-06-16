@@ -24,6 +24,9 @@ pip install -r requirements.txt
 python app.py
 ```
 
+> The Oracle driver's pip package is named **`oracledb`** (not `python-oracledb`).
+> On Windows use `py -m pip install flask oracledb` and `py app.py`.
+
 Then open <http://127.0.0.1:5000>.
 
 `python-oracledb` runs in **thin mode**, so no Oracle Instant Client install
