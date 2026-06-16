@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Oracle Filter &amp; Update</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <header>
+    <h1>Oracle Filter &amp; Update</h1>
+    <p class="sub">Connect &rarr; filter rows &rarr; set one column to 1 or 0.</p>
+  </header>
+
+  <main>
+    <!-- 1. Connection -->
+    <section class="card">
+      <h2><span class="step">1</span> Connection</h2>
+      <div class="grid">
+        <label>Host <input id="host" placeholder="db.example.com" /></label>
+        <label>Port <input id="port" value="1521" /></label>
+        <label>Service name <input id="service_name" placeholder="ORCLPDB1" /></label>
+        <label>User <input id="user" placeholder="scott" /></label>
+        <label>Password <input id="password" type="password" /></label>
+      </div>
+      <button id="connectBtn" class="primary">Connect</button>
+      <span id="connStatus" class="status"></span>
+    </section>
+
+    <!-- 2. Table -->
+    <section class="card" id="tableCard" hidden>
+      <h2><span class="step">2</span> Table</h2>
+      <label>Table
+        <select id="tableSelect"></select>
+      </label>
+      <button id="loadColumnsBtn">Load columns</button>
+      <span id="tableStatus" class="status"></span>
+    </section>
+
+    <!-- 3. Filters -->
+    <section class="card" id="filterCard" hidden>
+      <h2><span class="step">3</span> Filter conditions</h2>
+      <div class="match-row">
+        Match
+        <select id="matchSelect">
+          <option value="AND">ALL (AND)</option>
+          <option value="OR">ANY (OR)</option>
+        </select>
+        of the conditions below.
+      </div>
+      <div id="filters"></div>
+      <button id="addFilterBtn">+ Add condition</button>
+      <button id="previewBtn" class="primary">Preview matching rows</button>
+      <span id="previewStatus" class="status"></span>
+    </section>
+
+    <!-- 4. Preview -->
+    <section class="card" id="previewCard" hidden>
+      <h2>Matching rows</h2>
+      <p id="previewSummary" class="summary"></p>
+      <div class="table-wrap">
+        <table id="previewTable"></table>
+      </div>
+    </section>
+
+    <!-- 5. Update -->
+    <section class="card" id="updateCard" hidden>
+      <h2><span class="step">4</span> Update a column</h2>
+      <div class="grid">
+        <label>Column to update
+          <select id="targetColumn"></select>
+        </label>
+        <label>Set value to
+          <select id="newValue">
+            <option value="1">1</option>
+            <option value="0">0</option>
+          </select>
+        </label>
+      </div>
+      <p class="warn">This updates the chosen column for <b id="updateCount">all matching</b> rows and commits.</p>
+      <button id="updateBtn" class="danger">Apply update</button>
+      <span id="updateStatus" class="status"></span>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
