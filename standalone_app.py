@@ -20,12 +20,36 @@ Filter *values* are always sent as bind variables. Table/column *names* are
 validated against the table's real columns before being used in SQL.
 """
 
+import os
 import re
 
 import oracledb
 from flask import Flask, Response, jsonify, request
 
 app = Flask(__name__)
+
+# --------------------------------------------------------------------------
+# Driver mode.
+#
+# "Thin" mode (pure Python, the default) cannot log in to accounts whose
+# password is stored with an older Oracle verifier (error DPY-3015). To
+# support those, we try to switch the driver into "thick" mode, which uses an
+# installed Oracle client / Instant Client.
+#
+#   - If the ORACLE_LIB_DIR environment variable is set, we point the driver
+#     at that folder (the one containing oci.dll / libclntsh).
+#   - Otherwise we let the driver find an Oracle client already on PATH.
+#   - If no client is available, we silently stay in thin mode.
+# --------------------------------------------------------------------------
+DRIVER_MODE = "thin"
+try:
+    _lib_dir = os.environ.get("ORACLE_LIB_DIR") or None
+    oracledb.init_oracle_client(lib_dir=_lib_dir)
+    DRIVER_MODE = "thick"
+except Exception as _e:  # no client found / already initialised
+    _THICK_ERROR = str(_e)
+else:
+    _THICK_ERROR = ""
 
 # A bare Oracle identifier: starts with a letter, then letters/digits/_ $ #.
 IDENTIFIER_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_$#]*$")
@@ -462,4 +486,8 @@ $("updateBtn").addEventListener("click",async()=>{
 
 
 if __name__ == "__main__":
+    print("python-oracledb driver mode:", DRIVER_MODE.upper())
+    if DRIVER_MODE == "thin":
+        print("  (thin mode - if you hit DPY-3015, set ORACLE_LIB_DIR to your")
+        print("   Oracle client folder to enable thick mode. Detail:", _THICK_ERROR)
     app.run(host="127.0.0.1", port=5000, debug=True)
